@@ -286,7 +286,7 @@ export const translations = {
     addSuccess:         '✅ تمت الإضافة',
     saveError:          'حصل خطأ — حاول تاني',
   },
-} as const;
+};
 
 export type T = typeof translations.en;
 

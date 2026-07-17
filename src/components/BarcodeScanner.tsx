@@ -9,7 +9,6 @@ interface BarcodeScannerProps {
 
 export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -28,7 +27,6 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose 
         (decoded) => { onScan(decoded); stopScanner(); },
         () => {}   // suppress per-frame errors
       );
-      setIsScanning(true);
     } catch {
       setError('تعذّر فتح الكاميرا — تحقق من الصلاحيات.');
     }
