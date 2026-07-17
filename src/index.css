@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  background: #f7f8fb;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .page-shell {
+    @apply mx-auto max-w-7xl space-y-6;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-slate-950;
+  }
+
+  .page-subtitle {
+    @apply mt-1 text-sm text-slate-500;
+  }
+
+  .panel {
+    @apply rounded-lg border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.04)];
+  }
+
+  .panel-pad {
+    @apply panel p-5 lg:p-6;
+  }
+
+  .metric-card {
+    @apply panel p-5 transition-shadow hover:shadow-[0_20px_55px_rgba(15,23,42,0.07)];
+  }
+
+  .field-input {
+    @apply w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#0d493a] focus:ring-4 focus:ring-[#0d493a]/10;
+  }
+
+  .primary-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[#0d493a] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0a3b2f] disabled:cursor-not-allowed disabled:bg-slate-300;
+  }
+
+  .secondary-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50;
+  }
+
+  .danger-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700;
+  }
+
+  .table-shell {
+    @apply overflow-hidden rounded-lg border border-slate-200 bg-white;
+  }
+
+  .data-table {
+    @apply w-full text-sm;
+  }
+
+  .data-table thead {
+    @apply bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400;
+  }
+
+  .data-table th {
+    @apply px-4 py-3 font-semibold;
+  }
+
+  .data-table td {
+    @apply border-t border-slate-100 px-4 py-3 text-slate-600;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

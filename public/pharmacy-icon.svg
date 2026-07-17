@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Pharmacy Management System">
+  <rect width="512" height="512" rx="96" fill="#10b981"/>
+  <rect x="134" y="104" width="244" height="304" rx="40" fill="#ffffff"/>
+  <path d="M232 166h48v64h64v48h-64v64h-48v-64h-64v-48h64z" fill="#047857"/>
+  <path d="M168 392c48-52 128-52 176 0" fill="none" stroke="#a7f3d0" stroke-width="28" stroke-linecap="round"/>
+</svg>
