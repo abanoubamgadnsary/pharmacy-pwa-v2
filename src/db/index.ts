@@ -23,7 +23,6 @@ export interface Sale {
   soldAt: Date;
 }
 
-// Egyptian national drug catalog (loaded once from GitHub)
 export interface DrugCatalog {
   id?: number;
   commercial_name_en: string;
@@ -43,11 +42,20 @@ export class PharmacyDB extends Dexie {
 
   constructor() {
     super("PharmacyDB");
+
+    // Keep v2 so existing users aren't wiped
     this.version(2).stores({
-      drugs: "++id, barcode, name, company, expiryDate, stock",
-      sales: "++id, drugId, soldAt",
-      catalog:
-        "++id, barcode, commercial_name_en, commercial_name_ar, manufacturer",
+      drugs:   "++id, barcode, name, company, expiryDate, stock",
+      sales:   "++id, drugId, soldAt",
+      catalog: "++id, barcode, commercial_name_en, commercial_name_ar, manufacturer",
+    });
+
+    // v3 — barcode explicitly indexed for O(log n) catalog lookups
+    // Schema string is identical; Dexie rebuilds the index automatically.
+    this.version(3).stores({
+      drugs:   "++id, barcode, name, company, expiryDate, stock",
+      sales:   "++id, drugId, soldAt",
+      catalog: "++id, barcode, commercial_name_en, commercial_name_ar, manufacturer",
     });
   }
 }
