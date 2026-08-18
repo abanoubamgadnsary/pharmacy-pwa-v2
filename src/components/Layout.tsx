@@ -7,20 +7,26 @@ import {
   Database,
   FileText,
 
+  ClipboardList,
   Menu,
   Package,
   Search,
   ShoppingCart,
   X,
   Languages,
+  LogOut,
 } from "lucide-react";
 import { db, Drug } from '../db';
 import { formatEgp } from '../utils/format';
 import { useLang } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { canAccessPath, UserRole } from '../utils/permissions';
+import { getExpiryAlerts, formatExpiryDisplay } from '../utils/expiry';
 
 export const Layout: React.FC = () => {
   const navigate = useNavigate();
   const { t, lang, toggleLang, isRtl } = useLang();
+  const { user, logout, isManager } = useAuth();
   const drugs = useLiveQuery(() => db.drugs.toArray()) || [];
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -30,9 +36,10 @@ export const Layout: React.FC = () => {
   const navItems = [
     { to: '/', icon: ShoppingCart, label: t.sales },
     { to: '/inventory', icon: Package, label: t.inventory },
+    { to: '/restock', icon: ClipboardList, label: t.restock },
     { to: '/reports', icon: FileText, label: t.reports },
     { to: '/management', icon: Database, label: t.manage },
-  ];
+  ].filter((item) => user && canAccessPath(user.role as UserRole, item.to));
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -50,17 +57,9 @@ export const Layout: React.FC = () => {
   }, [drugs, searchQuery]);
 
   const lowStock = useMemo(() => drugs.filter((drug) => drug.stock <= 10), [drugs]);
-  const expiringSoon = useMemo(() => {
-    const now = new Date();
-    const future = new Date();
-    future.setDate(future.getDate() + 30);
-    return drugs.filter((drug) => {
-      const expiry = new Date(drug.expiryDate);
-      return expiry >= now && expiry <= future;
-    });
-  }, [drugs]);
+  const expiryAlerts = useMemo(() => getExpiryAlerts(drugs), [drugs]);
 
-  const alertCount = lowStock.length + expiringSoon.length;
+  const alertCount = lowStock.length + expiryAlerts.length;
 
   const selectDrug = (drug: Drug) => {
     setSearchQuery('');
@@ -128,7 +127,8 @@ export const Layout: React.FC = () => {
               <Menu className="h-5 w-5" />
             </button>
 
-            {/* Search */}
+            {/* Search — managers only */}
+            {isManager && (
             <div className="relative hidden w-full max-w-md sm:block">
               <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -160,6 +160,7 @@ export const Layout: React.FC = () => {
                 </div>
               )}
             </div>
+            )}
 
             {/* Right-side controls */}
             <div className="ms-auto flex items-center gap-3">
@@ -175,7 +176,8 @@ export const Layout: React.FC = () => {
                 <span className="hidden sm:inline">{lang === 'en' ? 'عربي' : 'EN'}</span>
               </button>
 
-              {/* Notifications */}
+              {/* Notifications — managers only */}
+              {isManager && (
               <div className="relative">
                 <button
                   onClick={() => {
@@ -214,14 +216,22 @@ export const Layout: React.FC = () => {
                             <span className="text-xs text-rose-600">{drug.stock} {t.unitsRemaining}</span>
                           </button>
                         ))}
-                        {expiringSoon.map((drug) => (
+                        {expiryAlerts.map(({ drug, days, urgency }) => (
                           <button
                             key={`exp-${drug.id}`}
                             onClick={() => selectDrug(drug)}
-                            className="w-full rounded-lg border border-amber-100 bg-amber-50 p-3 text-start text-sm hover:bg-amber-100"
+                            className={`w-full rounded-lg border p-3 text-start text-sm hover:opacity-90
+                              ${urgency === 'expired'
+                                ? 'border-rose-200 bg-rose-50 hover:bg-rose-100'
+                                : 'border-amber-100 bg-amber-50 hover:bg-amber-100'}`}
                           >
-                            <span className="block font-semibold text-amber-800">{t.expiringSoon}: {drug.name}</span>
-                            <span className="text-xs text-amber-600">{t.expiry} {drug.expiryDate}</span>
+                            <span className={`block font-semibold ${urgency === 'expired' ? 'text-rose-800' : 'text-amber-800'}`}>
+                              {urgency === 'expired' ? t.expiredAlert : t.expiringSoon}: {drug.name}
+                            </span>
+                            <span className={`text-xs ${urgency === 'expired' ? 'text-rose-600' : 'text-amber-600'}`}>
+                              {formatExpiryDisplay(drug.expiryDate)} ·{' '}
+                              {days < 0 ? t.expiredDaysAgo(Math.abs(days)) : t.expiresInDays(days)}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -229,8 +239,29 @@ export const Layout: React.FC = () => {
                   </div>
                 )}
               </div>
+              )}
 
-              {/* Admin menu */}
+              {/* User + logout */}
+              <div className="hidden sm:flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                <div className="leading-tight">
+                  <p className="text-xs font-semibold text-slate-900">{user?.name}</p>
+                  <p className="text-[11px] text-slate-400">
+                    {user?.role === 'manager' ? t.roleManager : t.roleCashier}
+                  </p>
+                </div>
+                <button
+                  onClick={logout}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600"
+                  title={t.logout}
+                  aria-label={t.logout}
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Admin menu — managers only */}
+              {isManager && (
+              <div className="relative">
               <button
                 onClick={() => {
                   setShowAdminMenu((open) => !open);
@@ -242,14 +273,10 @@ export const Layout: React.FC = () => {
                 <div className="grid h-8 w-8 place-items-center rounded-full bg-[#0d493a] text-xs font-bold text-white">
                   RX
                 </div>
-                <div className="leading-tight">
-                  <p className="text-xs font-semibold text-slate-900">{t.storeAdmin}</p>
-                  <p className="text-[11px] text-slate-400">{t.online}</p>
-                </div>
                 <ChevronDown className="h-4 w-4 text-slate-400" />
               </button>
               {showAdminMenu && (
-                <div className="absolute end-4 top-16 z-50 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-xl lg:end-8">
+                <div className="absolute end-0 top-12 z-50 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-xl lg:end-0">
                   <button onClick={() => { closeMenus(); navigate('/management'); }} className="w-full rounded-lg px-3 py-2 text-start text-sm text-slate-700 hover:bg-slate-50">
                     {t.manageInventory}
                   </button>
@@ -257,6 +284,8 @@ export const Layout: React.FC = () => {
                     {t.viewReports}
                   </button>
                 </div>
+              )}
+              </div>
               )}
             </div>
           </div>
@@ -281,6 +310,21 @@ export const Layout: React.FC = () => {
                 </button>
               </div>
               <SidebarNav mobile />
+              <div className="mt-auto border-t border-white/10 px-4 py-4">
+                <div className="mb-3 px-2">
+                  <p className="text-sm font-semibold">{user?.name}</p>
+                  <p className="text-xs text-white/55">
+                    {user?.role === 'manager' ? t.roleManager : t.roleCashier}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { closeMenus(); logout(); }}
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-white/72 hover:bg-white/10 hover:text-white"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {t.logout}
+                </button>
+              </div>
             </aside>
           </div>
         )}
@@ -291,7 +335,8 @@ export const Layout: React.FC = () => {
 
         {/* Mobile bottom nav */}
         <nav className="sticky bottom-0 z-30 border-t border-slate-200 bg-white lg:hidden">
-          <div className="grid grid-cols-4">
+          <div className={`grid ${navItems.length >= 5 ? 'grid-cols-5' : navItems.length === 1 ? 'grid-cols-1' : `grid-cols-${navItems.length}`}`}
+            style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}>
             {navItems.map((item) => (
               <NavLink
                 key={item.to}

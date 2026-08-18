@@ -9,7 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['pharmacy-icon.svg', 'mask-icon.svg'],
       devOptions: {
-        enabled: true
+        enabled: false,
       },
       manifest: {
         name: 'Pharmacy Management System',
@@ -53,5 +53,9 @@ export default defineConfig({
         ]
       }
     })
-  ]
+  ],
+  test: {
+    environment: 'node',
+    setupFiles: ['./src/test/setup.ts'],
+  },
 });

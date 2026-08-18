@@ -1,4 +1,4 @@
-import { db, DrugCatalog } from "../db";
+import { db, DrugCatalog, readyDb } from "../db";
 
 const CATALOG_URL =
   "https://raw.githubusercontent.com/mahmoudfalous/eg-drugs/main/data/eg_drugs.json";
@@ -38,11 +38,14 @@ type ProgressCallback = (p: LoadProgress) => void;
 
 export async function isCatalogLoaded(): Promise<boolean> {
   if (localStorage.getItem(CATALOG_VERSION_KEY) !== CATALOG_VERSION) return false;
+  await readyDb();
   return (await db.catalog.count()) > 0;
 }
 
 export async function loadCatalog(onProgress: ProgressCallback): Promise<void> {
   try {
+    await readyDb();
+
     onProgress({
       stage: "checking", percent: 5,
       message: "Checking catalog…",

@@ -3,6 +3,7 @@ import { Search, Loader2, Pill } from "lucide-react";
 import { DrugCatalog } from "../db";
 import { searchCatalog } from "../services/catalogLoader";
 import { formatEgp } from "../utils/format";
+import { useLang } from "../contexts/LanguageContext";
 
 interface Props {
   onSelect: (drug: DrugCatalog) => void;
@@ -12,9 +13,10 @@ interface Props {
 
 export const CatalogSearch: React.FC<Props> = ({
   onSelect,
-  placeholder = "ابحث بالاسم عربي أو إنجليزي أو التركيب…",
+  placeholder,
   autoFocus = false,
 }) => {
+  const { t, isRtl } = useLang();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<DrugCatalog[]>([]);
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,6 @@ export const CatalogSearch: React.FC<Props> = ({
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  // debounced search
   useEffect(() => {
     clearTimeout(timerRef.current);
     if (query.trim().length < 2) {
@@ -40,7 +41,6 @@ export const CatalogSearch: React.FC<Props> = ({
     }, 280);
   }, [query]);
 
-  // close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node))
@@ -57,33 +57,32 @@ export const CatalogSearch: React.FC<Props> = ({
   };
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={wrapRef} className="relative" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="relative">
         {loading ? (
-          <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 animate-spin" />
+          <Loader2 className={`absolute top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 animate-spin ${isRtl ? 'right-3' : 'left-3'}`} />
         ) : (
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className={`absolute top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 ${isRtl ? 'right-3' : 'left-3'}`} />
         )}
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t.catalogSearchDefault}
           autoFocus={autoFocus}
-          className="field-input pl-10 text-right placeholder:text-right"
+          className={`field-input text-end placeholder:text-end ${isRtl ? 'pr-10' : 'pl-10'}`}
           dir="auto"
         />
       </div>
 
-      {/* Dropdown */}
       {open && results.length > 0 && (
         <div className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-xl">
           {results.map((drug, i) => (
             <button
               key={i}
               onMouseDown={() => handleSelect(drug)}
-              className="w-full border-b border-slate-100 px-4 py-3 text-right transition-colors last:border-b-0 hover:bg-[#f4fbf6]"
+              className="w-full border-b border-slate-100 px-4 py-3 text-end transition-colors last:border-b-0 hover:bg-[#f4fbf6]"
             >
               <div className="flex items-start gap-3">
                 <Pill className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
@@ -132,13 +131,12 @@ export const CatalogSearch: React.FC<Props> = ({
         </div>
       )}
 
-      {/* No results */}
       {open && results.length === 0 && query.trim().length >= 2 && !loading && (
         <div
           className="absolute z-50 w-full mt-1 bg-white border border-gray-200
           rounded-lg shadow-xl p-4 text-center text-gray-500 text-sm"
         >
-          مش لاقي نتايج لـ "{query}"
+          {t.catalogNoResults(query)}
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, X } from 'lucide-react';
+import { useLang } from '../contexts/LanguageContext';
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void;
@@ -8,6 +9,7 @@ interface BarcodeScannerProps {
 }
 
 export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose }) => {
+  const { t, isRtl } = useLang();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [error, setError] = useState('');
 
@@ -25,10 +27,10 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose 
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 260, height: 160 }, aspectRatio: 1.3 },
         (decoded) => { onScan(decoded); stopScanner(); },
-        () => {}   // suppress per-frame errors
+        () => {}
       );
     } catch {
-      setError('تعذّر فتح الكاميرا — تحقق من الصلاحيات.');
+      setError(t.cameraError);
     }
   };
 
@@ -43,11 +45,11 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose 
   const handleClose = async () => { await stopScanner(); onClose(); };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between bg-[#0d493a] p-4">
         <div className="flex items-center gap-2 text-white">
           <Camera className="w-6 h-6" />
-          <h2 className="text-lg font-semibold">مسح الباركود</h2>
+          <h2 className="text-lg font-semibold">{t.scanBarcodeTitle}</h2>
         </div>
         <button onClick={handleClose} className="text-white hover:text-gray-300">
           <X className="w-6 h-6" />
@@ -60,14 +62,14 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onScan, onClose 
             <p className="text-lg">{error}</p>
             <button onClick={handleClose}
               className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-              إغلاق
+              {t.close}
             </button>
           </div>
         ) : (
           <div className="w-full max-w-md">
             <div id="reader" className="overflow-hidden rounded-lg" />
             <p className="text-white text-center mt-4 text-sm">
-              ضع الباركود داخل الإطار
+              {t.placeBarcodeInFrame}
             </p>
           </div>
         )}

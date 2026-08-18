@@ -1,32 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Package, Calendar, TrendingDown } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { AlertTriangle, Package, Calendar, TrendingDown, ClipboardList } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { getLowStockDrugs, getExpiringSoonDrugs } from '../utils/dbOperations';
+import { getLowStockDrugs } from '../utils/dbOperations';
 import { Drug } from '../db';
 import { formatEgp } from '../utils/format';
-import { format } from 'date-fns';
 import { useLang } from '../contexts/LanguageContext';
+import { getExpiryAlerts, formatExpiryDisplay } from '../utils/expiry';
 
 export const InventoryPage: React.FC = () => {
   const { t, isRtl } = useLang();
   const allDrugs = useLiveQuery(() => db.drugs.toArray()) || [];
-  const [lowStockDrugs, setLowStockDrugs] = useState<Drug[]>([]);
-  const [expiringSoonDrugs, setExpiringSoonDrugs] = useState<Drug[]>([]);
+  const lowStockDrugs = useLiveQuery(() => getLowStockDrugs(10), []) ?? [];
 
-  useEffect(() => {
-    loadAlerts();
-  }, [allDrugs]);
-
-  const loadAlerts = async () => {
-    const lowStock = await getLowStockDrugs(10);
-    const expiringSoon = await getExpiringSoonDrugs(30);
-    setLowStockDrugs(lowStock);
-    setExpiringSoonDrugs(expiringSoon);
-  };
+  const expiryAlerts = useMemo(() => getExpiryAlerts(allDrugs), [allDrugs]);
+  const expiredDrugs = useMemo(
+    () => expiryAlerts.filter((a) => a.urgency === 'expired'),
+    [expiryAlerts],
+  );
+  const expiringSoonDrugs = useMemo(
+    () => expiryAlerts.filter((a) => a.urgency !== 'expired'),
+    [expiryAlerts],
+  );
 
   const getTotalValue = () => allDrugs.reduce((sum, drug) => sum + (drug.stock * drug.price), 0);
   const getTotalStock = () => allDrugs.reduce((sum, drug) => sum + drug.stock, 0);
+
+  const ExpiryRow = ({ drug, days, urgency }: { drug: Drug; days: number; urgency: string }) => (
+    <div className="flex items-center justify-between rounded-lg border bg-white p-4
+      border-amber-100">
+      <div>
+        <p className="font-semibold text-gray-900">{drug.name}</p>
+        <p className="text-sm text-gray-600">{drug.company}</p>
+      </div>
+      <div className="text-end">
+        <p className={`text-lg font-bold ${urgency === 'expired' ? 'text-rose-600' : 'text-orange-600'}`}>
+          {formatExpiryDisplay(drug.expiryDate)}
+        </p>
+        <p className="text-sm text-gray-500">
+          {days < 0 ? t.expiredDaysAgo(Math.abs(days)) : t.expiresInDays(days)} · {t.stockCol}: {drug.stock}
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="page-shell" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -37,7 +54,6 @@ export const InventoryPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="metric-card">
           <div className="flex items-center justify-between">
@@ -72,14 +88,37 @@ export const InventoryPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Low Stock Alert */}
+      {expiredDrugs.length > 0 && (
+        <div className="rounded-lg border border-rose-300 bg-rose-50 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="w-6 h-6 text-rose-600" />
+            <h2 className="text-lg font-bold text-rose-900">
+              {t.expiredAlertTitle} ({expiredDrugs.length})
+            </h2>
+          </div>
+          <div className="space-y-2">
+            {expiredDrugs.map(({ drug, days, urgency }) => (
+              <div key={drug.id} className="rounded-lg border border-rose-200 bg-white">
+                <ExpiryRow drug={drug} days={days} urgency={urgency} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {lowStockDrugs.length > 0 && (
         <div className="rounded-lg border border-rose-200 bg-rose-50 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
-            <h2 className="text-lg font-bold text-red-900">
-              {t.lowStockAlert} ({lowStockDrugs.length})
-            </h2>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+              <h2 className="text-lg font-bold text-red-900">
+                {t.lowStockAlert} ({lowStockDrugs.length})
+              </h2>
+            </div>
+            <Link to="/restock" className="secondary-btn text-sm py-2">
+              <ClipboardList className="w-4 h-4" />
+              {t.restockViewOrders}
+            </Link>
           </div>
           <div className="space-y-2">
             {lowStockDrugs.map((drug) => (
@@ -101,7 +140,6 @@ export const InventoryPage: React.FC = () => {
         </div>
       )}
 
-      {/* Expiring Soon Alert */}
       {expiringSoonDrugs.length > 0 && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -111,30 +149,15 @@ export const InventoryPage: React.FC = () => {
             </h2>
           </div>
           <div className="space-y-2">
-            {expiringSoonDrugs.map((drug) => (
-              <div
-                key={drug.id}
-                className="flex items-center justify-between rounded-lg border border-amber-100 bg-white p-4"
-              >
-                <div>
-                  <p className="font-semibold text-gray-900">{drug.name}</p>
-                  <p className="text-sm text-gray-600">{drug.company}</p>
-                </div>
-                <div className="text-end">
-                  <p className="text-lg font-bold text-orange-600">
-                    {drug.expiryDate
-                      ? format(new Date(drug.expiryDate), 'MMM dd, yyyy')
-                      : '—'}
-                  </p>
-                  <p className="text-sm text-gray-500">{t.stockCol}: {drug.stock}</p>
-                </div>
+            {expiringSoonDrugs.map(({ drug, days, urgency }) => (
+              <div key={drug.id} className="rounded-lg border border-amber-100 bg-white">
+                <ExpiryRow drug={drug} days={days} urgency={urgency} />
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* All Inventory */}
       <div className="panel-pad">
         <h2 className="text-xl font-bold text-gray-900 mb-4">{t.allInventory}</h2>
 
@@ -168,11 +191,7 @@ export const InventoryPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="text-slate-900">{formatEgp(drug.price)}</td>
-                    <td>
-                      {drug.expiryDate
-                        ? format(new Date(drug.expiryDate), 'MMM dd, yyyy')
-                        : '—'}
-                    </td>
+                    <td>{formatExpiryDisplay(drug.expiryDate)}</td>
                   </tr>
                 ))}
               </tbody>
