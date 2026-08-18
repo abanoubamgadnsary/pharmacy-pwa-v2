@@ -23,7 +23,11 @@ import {
   voidSale,
 } from "../utils/dbOperations";
 import { formatEgp } from "../utils/format";
-import { formatExpiryDisplay, daysUntilExpiry, parseExpiryDate } from "../utils/expiry";
+import {
+  formatExpiryDisplay,
+  daysUntilExpiry,
+  parseExpiryDate,
+} from "../utils/expiry";
 import { useLang } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -36,7 +40,6 @@ import {
   endOfMonth,
   startOfYear,
   endOfYear,
-  differenceInDays,
   subDays,
 } from "date-fns";
 import { arEG } from "date-fns/locale";

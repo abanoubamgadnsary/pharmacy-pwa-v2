@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { Minus, Plus, X, Package, Layers } from 'lucide-react';
-import type { Drug } from '../db';
-import { useLang } from '../contexts/LanguageContext';
-import { formatEgp } from '../utils/format';
+import React, { useMemo, useState } from "react";
+import { Minus, Plus, X, Package, Layers } from "lucide-react";
+import type { Drug } from "../db";
+import { useLang } from "../contexts/LanguageContext";
+import { formatEgp } from "../utils/format";
 import {
   getStripsPerBox,
   getUnitPrice,
@@ -11,10 +11,9 @@ import {
   maxBoxesGivenStrips,
   maxStripsGivenBoxes,
   splitStock,
-  formatStockDisplay,
   totalStripsRequested,
   SaleUnit,
-} from '../utils/units';
+} from "../utils/units";
 
 export type SalePick = { unit: SaleUnit; qty: number; unitPrice: number };
 
@@ -50,7 +49,9 @@ function CounterRow({
           </div>
           <div>
             <p className="font-bold text-slate-900">{label}</p>
-            <p className="text-xs text-emerald-600 font-semibold">{formatEgp(unitPrice)}</p>
+            <p className="text-xs text-emerald-600 font-semibold">
+              {formatEgp(unitPrice)}
+            </p>
           </div>
         </div>
         <p className="text-xs text-slate-400">{formatEgp(unitPrice * qty)}</p>
@@ -81,14 +82,16 @@ function CounterRow({
           <Plus className="h-4 w-4" />
         </button>
       </div>
-      <p className="text-center text-[11px] text-slate-400">
-        max {max}
-      </p>
+      <p className="text-center text-[11px] text-slate-400">max {max}</p>
     </div>
   );
 }
 
-export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) => {
+export const SaleUnitPicker: React.FC<Props> = ({
+  drug,
+  onConfirm,
+  onClose,
+}) => {
   const { t, isRtl } = useLang();
   const multiUnit = hasStripBoxChoice(drug);
   const spb = getStripsPerBox(drug);
@@ -103,9 +106,12 @@ export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) =>
   const total = useMemo(() => {
     if (!multiUnit) {
       const q = stripQty || boxQty;
-      return getUnitPrice(drug, 'box') * q;
+      return getUnitPrice(drug, "box") * q;
     }
-    return getUnitPrice(drug, 'box') * boxQty + getUnitPrice(drug, 'strip') * stripQty;
+    return (
+      getUnitPrice(drug, "box") * boxQty +
+      getUnitPrice(drug, "strip") * stripQty
+    );
   }, [multiUnit, drug, boxQty, stripQty]);
 
   const requestedStrips = totalStripsRequested(boxQty, stripQty, drug);
@@ -115,11 +121,21 @@ export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) =>
     if (!canConfirm) return;
     const items: SalePick[] = [];
     if (multiUnit) {
-      if (boxQty > 0) items.push({ unit: 'box', qty: boxQty, unitPrice: getUnitPrice(drug, 'box') });
-      if (stripQty > 0) items.push({ unit: 'strip', qty: stripQty, unitPrice: getUnitPrice(drug, 'strip') });
+      if (boxQty > 0)
+        items.push({
+          unit: "box",
+          qty: boxQty,
+          unitPrice: getUnitPrice(drug, "box"),
+        });
+      if (stripQty > 0)
+        items.push({
+          unit: "strip",
+          qty: stripQty,
+          unitPrice: getUnitPrice(drug, "strip"),
+        });
     } else {
       const q = Math.max(boxQty, stripQty, 1);
-      items.push({ unit: 'box', qty: q, unitPrice: getUnitPrice(drug, 'box') });
+      items.push({ unit: "box", qty: q, unitPrice: getUnitPrice(drug, "box") });
     }
     onConfirm(items);
   };
@@ -138,16 +154,22 @@ export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) =>
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
       <div
         className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto"
-        dir={isRtl ? 'rtl' : 'ltr'}
+        dir={isRtl ? "rtl" : "ltr"}
       >
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <div>
             <h3 className="font-bold text-slate-900">{t.saleUnitTitle}</h3>
             {multiUnit && (
-              <p className="text-xs text-slate-500 mt-0.5">{t.saleUnitSubtitle}</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {t.saleUnitSubtitle}
+              </p>
             )}
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -155,7 +177,9 @@ export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) =>
         <div className="space-y-4 p-5">
           <div className="rounded-lg bg-slate-50 p-3 text-end">
             <p className="font-semibold text-slate-900">{drug.name}</p>
-            {drug.nameAr && <p className="text-sm text-slate-500">{drug.nameAr}</p>}
+            {drug.nameAr && (
+              <p className="text-sm text-slate-500">{drug.nameAr}</p>
+            )}
           </div>
 
           {multiUnit ? (
@@ -163,13 +187,21 @@ export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) =>
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl border-2 border-[#0d493a]/20 bg-[#f4fbf6] p-3 text-center">
                   <Package className="h-5 w-5 mx-auto text-[#0d493a] mb-1" />
-                  <p className="text-2xl font-bold text-[#0d493a]">{stockSplit.boxes}</p>
-                  <p className="text-xs font-medium text-slate-600">{t.saleUnitBox}</p>
+                  <p className="text-2xl font-bold text-[#0d493a]">
+                    {stockSplit.boxes}
+                  </p>
+                  <p className="text-xs font-medium text-slate-600">
+                    {t.saleUnitBox}
+                  </p>
                 </div>
                 <div className="rounded-xl border-2 border-violet-200 bg-violet-50 p-3 text-center">
                   <Layers className="h-5 w-5 mx-auto text-violet-600 mb-1" />
-                  <p className="text-2xl font-bold text-violet-700">{stockSplit.strips}</p>
-                  <p className="text-xs font-medium text-slate-600">{t.saleUnitStrip}</p>
+                  <p className="text-2xl font-bold text-violet-700">
+                    {stockSplit.strips}
+                  </p>
+                  <p className="text-xs font-medium text-slate-600">
+                    {t.saleUnitStrip}
+                  </p>
                 </div>
               </div>
               <p className="text-center text-xs text-slate-500">
@@ -179,7 +211,7 @@ export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) =>
               <CounterRow
                 icon={Package}
                 label={t.saleUnitBox}
-                unitPrice={getUnitPrice(drug, 'box')}
+                unitPrice={getUnitPrice(drug, "box")}
                 qty={boxQty}
                 max={maxBoxes}
                 onChange={handleBoxChange}
@@ -187,7 +219,7 @@ export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) =>
               <CounterRow
                 icon={Layers}
                 label={t.saleUnitStrip}
-                unitPrice={getUnitPrice(drug, 'strip')}
+                unitPrice={getUnitPrice(drug, "strip")}
                 qty={stripQty}
                 max={maxStrips}
                 onChange={handleStripChange}
@@ -197,29 +229,40 @@ export const SaleUnitPicker: React.FC<Props> = ({ drug, onConfirm, onClose }) =>
             <CounterRow
               icon={Package}
               label={t.saleUnitQty}
-              unitPrice={getUnitPrice(drug, 'box')}
+              unitPrice={getUnitPrice(drug, "box")}
               qty={stripQty}
-              max={maxSellQty(drug, 'box')}
+              max={maxSellQty(drug, "box")}
               onChange={setStripQty}
             />
           )}
 
           <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-4 py-3">
-            <span className="text-lg font-bold text-emerald-700">{formatEgp(total)}</span>
+            <span className="text-lg font-bold text-emerald-700">
+              {formatEgp(total)}
+            </span>
             <span className="text-sm text-emerald-800 text-end">
               {multiUnit && boxQty > 0 && `${boxQty} ${t.saleUnitBox}`}
-              {multiUnit && boxQty > 0 && stripQty > 0 && ' + '}
+              {multiUnit && boxQty > 0 && stripQty > 0 && " + "}
               {multiUnit && stripQty > 0 && `${stripQty} ${t.saleUnitStrip}`}
-              {!multiUnit && `${stripQty} × ${formatEgp(getUnitPrice(drug, 'box'))}`}
+              {!multiUnit &&
+                `${stripQty} × ${formatEgp(getUnitPrice(drug, "box"))}`}
             </span>
           </div>
 
           {drug.stock < 1 ? (
-            <p className="text-center text-sm text-rose-600">{t.saleUnitOutOfStock}</p>
+            <p className="text-center text-sm text-rose-600">
+              {t.saleUnitOutOfStock}
+            </p>
           ) : !canConfirm ? (
-            <p className="text-center text-sm text-amber-600">{t.saleUnitPickOne}</p>
+            <p className="text-center text-sm text-amber-600">
+              {t.saleUnitPickOne}
+            </p>
           ) : (
-            <button type="button" onClick={handleConfirm} className="primary-btn w-full py-3">
+            <button
+              type="button"
+              onClick={handleConfirm}
+              className="primary-btn w-full py-3"
+            >
               {t.saleUnitAddToCart}
             </button>
           )}
