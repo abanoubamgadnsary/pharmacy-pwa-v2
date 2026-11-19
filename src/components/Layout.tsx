@@ -52,9 +52,9 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, end, badge, on
       `group relative flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-medium
        transition-all duration-200 select-none overflow-hidden
        ${isActive
-         ? 'text-[#c8ff5e]'
-         : 'text-white/55 hover:text-white/90 hover:bg-white/7'
-       }`
+        ? 'text-[#c8ff5e]'
+        : 'text-white/55 hover:text-white/90 hover:bg-white/7'
+      }`
     }
   >
     {({ isActive }) => (
@@ -99,14 +99,14 @@ export const Layout: React.FC = () => {
   const { t, lang, toggleLang, isRtl } = useLang();
   const drugs = useLiveQuery(() => db.drugs.toArray()) || [];
 
-  const [searchQuery,        setSearchQuery]        = useState('');
-  const [showNotifications,  setShowNotifications]  = useState(false);
-  const [showAdminMenu,      setShowAdminMenu]       = useState(false);
-  const [showMobileMenu,     setShowMobileMenu]      = useState(false);
-  const [canInstall,         setCanInstall]          = useState(false);
-  const [installPrompt,      setInstallPrompt]       = useState<Event | null>(null);
-  const [installed,          setInstalled]           = useState(false);
-  const [timeStr,            setTimeStr]             = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [canInstall, setCanInstall] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [installed, setInstalled] = useState(false);
+  const [timeStr, setTimeStr] = useState('');
 
   /* PWA install prompt */
   useEffect(() => {
@@ -131,10 +131,10 @@ export const Layout: React.FC = () => {
   };
 
   const navItems = [
-    { to: '/',           icon: ShoppingCart, label: t.sales,     end: true },
-    { to: '/inventory',  icon: Package,      label: t.inventory             },
-    { to: '/reports',    icon: FileText,     label: t.reports               },
-    { to: '/management', icon: Database,     label: t.manage                },
+    { to: '/', icon: ShoppingCart, label: t.sales, end: true },
+    { to: '/inventory', icon: Package, label: t.inventory },
+    { to: '/reports', icon: FileText, label: t.reports },
+    { to: '/management', icon: Database, label: t.manage },
   ];
 
   const searchResults = useMemo(() => {
@@ -148,8 +148,8 @@ export const Layout: React.FC = () => {
     ).slice(0, 6);
   }, [drugs, searchQuery]);
 
-  const lowStock    = useMemo(() => drugs.filter(d => d.stock > 0 && d.stock <= 10), [drugs]);
-  const outOfStock  = useMemo(() => drugs.filter(d => d.stock === 0), [drugs]);
+  const lowStock = useMemo(() => drugs.filter(d => d.stock > 0 && d.stock <= 10), [drugs]);
+  const outOfStock = useMemo(() => drugs.filter(d => d.stock === 0), [drugs]);
   const expiringSoon = useMemo(() => {
     const limit = new Date(); limit.setDate(limit.getDate() + 30);
     return drugs.filter(d => { const e = new Date(d.expiryDate); return e >= new Date() && e <= limit; });
@@ -185,7 +185,7 @@ export const Layout: React.FC = () => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold tracking-widest text-white uppercase leading-none">
-              MEDISOL
+              Easypharm
             </p>
             <p className="text-[10px] mt-0.5" style={{ color: 'rgba(200,255,94,.55)' }}>
               Pharmacy POS
