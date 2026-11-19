@@ -140,7 +140,7 @@ export const UsersPanel: React.FC = () => {
             <option value="manager">{t.roleManager}</option>
           </select>
           <p className="text-xs text-slate-500">{t.usersPinHint}</p>
-          <PinPad value={pin} onChange={setPin} />
+          <PinPad value={pin} onChange={setPin} onSubmit={handleAdd} />
           <button type="button" onClick={handleAdd} className="primary-btn w-full py-2">
             {t.usersSave}
           </button>
@@ -163,6 +163,7 @@ export const UsersPanel: React.FC = () => {
           <PinPad
             value={pinStep === 'new' ? newPin : confirmPin}
             onChange={pinStep === 'new' ? setNewPin : setConfirmPin}
+            onSubmit={handlePinStep}
           />
           <button
             type="button"

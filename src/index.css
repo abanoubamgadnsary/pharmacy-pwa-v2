@@ -2,98 +2,369 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* ═══════════════════════════════════════════════
+   PHARMA DESIGN SYSTEM — Color Tokens
+═══════════════════════════════════════════════ */
+:root {
+  --ph-darkest:  #041510;
+  --ph-dark:     #072318;
+  --ph-green:    #0d493a;
+  --ph-mid:      #1a6b55;
+  --ph-mint:     #00c896;
+  --ph-lime:     #c8ff5e;
+  --ph-glow:     rgba(0, 200, 150, 0.22);
+  --ph-glow-lg:  rgba(0, 200, 150, 0.35);
+  --ph-bg:       #f0f8f5;
+  --ph-surface:  #ffffff;
+  --ph-border:   #d4ece4;
+  --ph-text:     #0a2218;
+  --ph-sub:      #4d7263;
+  --ph-danger:   #e53e3e;
+  --ph-warn:     #dd6b20;
+  --ph-info:     #3182ce;
+  --shadow-sm:   0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(13,73,58,.06);
+  --shadow-md:   0 2px 4px rgba(0,0,0,.06), 0 8px 24px rgba(13,73,58,.1);
+  --shadow-lg:   0 4px 8px rgba(0,0,0,.08), 0 16px 40px rgba(13,73,58,.14);
+  --shadow-glow: 0 0 0 3px var(--ph-glow);
 }
 
+/* ═══════════════════════════════════════════════
+   KEYFRAME ANIMATIONS
+═══════════════════════════════════════════════ */
+
+/* Entry animations */
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity:0; transform:translateY(-10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes slideInLeft {
+  from { opacity:0; transform:translateX(-14px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity:0; transform:translateX(14px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes fadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes scaleIn {
+  from { opacity:0; transform:scale(.92); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+/* Pharma-specific */
+@keyframes heartbeat {
+  0%,100% { transform:scale(1); }
+  14%     { transform:scale(1.22); }
+  28%     { transform:scale(1); }
+  42%     { transform:scale(1.14); }
+  70%     { transform:scale(1); }
+}
+@keyframes pulseGlow {
+  0%,100% { box-shadow:0 0 0 0 var(--ph-glow); }
+  50%     { box-shadow:0 0 0 8px transparent; }
+}
+@keyframes glowPulse {
+  0%,100% { opacity:.6; }
+  50%     { opacity:1; }
+}
+@keyframes float {
+  0%,100% { transform:translateY(0); }
+  50%     { transform:translateY(-4px); }
+}
+@keyframes floatRotate {
+  0%,100% { transform:translateY(0) rotate(-28deg); }
+  50%     { transform:translateY(-5px) rotate(-28deg); }
+}
+@keyframes spinSlow {
+  to { transform:rotate(360deg); }
+}
+@keyframes ecgDraw {
+  from { stroke-dashoffset:300; }
+  to   { stroke-dashoffset:0; }
+}
+@keyframes countUp {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position:-400px 0; }
+  100% { background-position:400px 0; }
+}
+@keyframes badgePop {
+  0%   { transform:scale(0); }
+  60%  { transform:scale(1.2); }
+  100% { transform:scale(1); }
+}
+@keyframes ringPulse {
+  0%   { transform:scale(1); opacity:1; }
+  100% { transform:scale(2); opacity:0; }
+}
+@keyframes gradientShift {
+  0%   { background-position:0% 50%; }
+  50%  { background-position:100% 50%; }
+  100% { background-position:0% 50%; }
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATION UTILITY CLASSES
+═══════════════════════════════════════════════ */
+.anim-slide-up    { animation:slideUp       .35s cubic-bezier(.22,1,.36,1) both; }
+.anim-slide-down  { animation:slideDown     .3s  cubic-bezier(.22,1,.36,1) both; }
+.anim-slide-left  { animation:slideInLeft   .35s cubic-bezier(.22,1,.36,1) both; }
+.anim-slide-right { animation:slideInRight  .35s cubic-bezier(.22,1,.36,1) both; }
+.anim-fade        { animation:fadeIn        .25s ease both; }
+.anim-scale       { animation:scaleIn       .3s  cubic-bezier(.22,1,.36,1) both; }
+.anim-heartbeat   { animation:heartbeat     1.4s ease-in-out infinite; }
+.anim-float       { animation:float         3s   ease-in-out infinite; }
+.anim-float-pill  { animation:floatRotate   2.8s ease-in-out infinite; }
+.anim-spin-slow   { animation:spinSlow      8s   linear infinite; }
+.anim-glow-pulse  { animation:glowPulse     2s   ease-in-out infinite; }
+.anim-count       { animation:countUp       .4s  ease both; }
+.anim-shimmer {
+  background:linear-gradient(90deg,#f0f9f6 25%,#e4f4ee 50%,#f0f9f6 75%);
+  background-size:400px 100%;
+  animation:shimmer 1.6s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.d-50  { animation-delay:.05s; }
+.d-100 { animation-delay:.1s;  }
+.d-150 { animation-delay:.15s; }
+.d-200 { animation-delay:.2s;  }
+.d-300 { animation-delay:.3s;  }
+.d-400 { animation-delay:.4s;  }
+.d-500 { animation-delay:.5s;  }
+
+/* ═══════════════════════════════════════════════
+   BASE RESET
+═══════════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  background: #f7f8fb;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Oxygen',
+    'Ubuntu','Cantarell','Fira Sans','Droid Sans','Helvetica Neue',sans-serif;
+  background:var(--ph-bg);
+  color:var(--ph-text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
+/* ═══════════════════════════════════════════════
+   COMPONENT CLASSES
+═══════════════════════════════════════════════ */
 @layer components {
+
+  /* ── Page shell ─────────────────────────────── */
   .page-shell {
     @apply mx-auto max-w-7xl space-y-6;
+    animation:slideUp .38s cubic-bezier(.22,1,.36,1) both;
   }
-
   .page-title {
-    @apply text-2xl font-bold tracking-tight text-slate-950;
+    @apply text-2xl font-bold tracking-tight;
+    color:var(--ph-text);
   }
+  .page-subtitle { @apply mt-1 text-sm; color:var(--ph-sub); }
 
-  .page-subtitle {
-    @apply mt-1 text-sm text-slate-500;
-  }
-
+  /* ── Panel ──────────────────────────────────── */
   .panel {
-    @apply rounded-lg border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.04)];
+    @apply rounded-2xl border bg-white;
+    border-color:var(--ph-border);
+    box-shadow:var(--shadow-sm);
+    transition:box-shadow .25s ease, transform .25s ease;
   }
+  .panel-pad { @apply panel p-5 lg:p-6; }
 
-  .panel-pad {
-    @apply panel p-5 lg:p-6;
-  }
-
+  /* ── Metric card ────────────────────────────── */
   .metric-card {
-    @apply panel p-5 transition-shadow hover:shadow-[0_20px_55px_rgba(15,23,42,0.07)];
+    @apply panel p-5 cursor-default;
+    transition:all .28s cubic-bezier(.4,0,.2,1);
+  }
+  .metric-card:hover {
+    transform:translateY(-4px) scale(1.015);
+    box-shadow:var(--shadow-lg);
   }
 
+  /* ── Inputs ─────────────────────────────────── */
   .field-input {
-    @apply w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#0d493a] focus:ring-4 focus:ring-[#0d493a]/10;
+    @apply w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none;
+    border-color:var(--ph-border);
+    color:var(--ph-text);
+    transition:border-color .2s ease, box-shadow .2s ease;
   }
+  .field-input:focus {
+    border-color:var(--ph-mint);
+    box-shadow:var(--shadow-glow);
+  }
+  .field-input::placeholder { color:var(--ph-sub); opacity:.65; }
 
+  /* ── Buttons ────────────────────────────────── */
   .primary-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[#0d493a] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0a3b2f] disabled:cursor-not-allowed disabled:bg-slate-300;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl
+           px-4 py-2.5 text-sm font-semibold select-none;
+    background:linear-gradient(135deg, var(--ph-green) 0%, var(--ph-mid) 100%);
+    color:var(--ph-lime);
+    box-shadow:0 2px 8px rgba(13,73,58,.28), inset 0 1px 0 rgba(255,255,255,.08);
+    transition:all .2s cubic-bezier(.4,0,.2,1);
+  }
+  .primary-btn:hover:not(:disabled) {
+    transform:translateY(-2px) scale(1.02);
+    box-shadow:0 6px 20px rgba(13,73,58,.38);
+    filter:brightness(1.08);
+  }
+  .primary-btn:active:not(:disabled) { transform:scale(.97); }
+  .primary-btn:disabled {
+    @apply cursor-not-allowed;
+    background:#e2e8f0; color:#a0aec0;
+    box-shadow:none; transform:none;
   }
 
   .secondary-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl
+           border bg-white px-4 py-2.5 text-sm font-semibold select-none;
+    border-color:var(--ph-border);
+    color:var(--ph-text);
+    transition:all .2s ease;
+  }
+  .secondary-btn:hover {
+    background:var(--ph-bg);
+    border-color:var(--ph-mint);
+    color:var(--ph-green);
+    transform:translateY(-1px);
+    box-shadow:0 2px 8px var(--ph-glow);
   }
 
   .danger-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl
+           px-4 py-2.5 text-sm font-semibold select-none text-white;
+    background:linear-gradient(135deg,#e53e3e,#c53030);
+    box-shadow:0 2px 8px rgba(229,62,62,.28);
+    transition:all .2s ease;
   }
+  .danger-btn:hover {
+    transform:translateY(-1px);
+    box-shadow:0 4px 16px rgba(229,62,62,.4);
+  }
+  .danger-btn:active { transform:scale(.97); }
 
+  /* ── Tables ─────────────────────────────────── */
   .table-shell {
-    @apply overflow-hidden rounded-lg border border-slate-200 bg-white;
+    @apply overflow-hidden rounded-2xl border bg-white;
+    border-color:var(--ph-border);
+    box-shadow:var(--shadow-sm);
   }
-
-  .data-table {
-    @apply w-full text-sm;
-  }
-
+  .data-table { @apply w-full text-sm; }
   .data-table thead {
-    @apply bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400;
+    background:linear-gradient(90deg,#edf7f3,#e4f2ec);
+    @apply text-xs uppercase tracking-wider;
+    color:var(--ph-sub);
   }
-
-  .data-table th {
-    @apply px-4 py-3 font-semibold;
-  }
-
+  .data-table th { @apply px-4 py-3 font-semibold text-left; }
   .data-table td {
-    @apply border-t border-slate-100 px-4 py-3 text-slate-600;
+    @apply border-t px-4 py-3;
+    border-color:var(--ph-border);
+    color:var(--ph-sub);
+    transition:background .15s ease;
+  }
+  .data-table tr { transition:background .15s ease; }
+  .data-table tbody tr:hover td { background:rgba(0,200,150,.04); }
+
+  /* ── Stock badge ────────────────────────────── */
+  .stock-ok      { @apply rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700; }
+  .stock-low     { @apply rounded-full bg-amber-100  px-2.5 py-0.5 text-xs font-bold text-amber-700;  }
+  .stock-out     { @apply rounded-full bg-rose-100   px-2.5 py-0.5 text-xs font-bold text-rose-700;   }
+
+  /* ── Pill shape badge ───────────────────────── */
+  .pill-tag {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
+    background:linear-gradient(135deg,var(--ph-bg),#e0f0ea);
+    border:1px solid var(--ph-border);
+    color:var(--ph-green);
+  }
+
+  /* ── Pharma icon bg ─────────────────────────── */
+  .pharma-icon-bg {
+    @apply grid h-11 w-11 shrink-0 place-items-center rounded-2xl;
+    background:linear-gradient(135deg,var(--ph-green),var(--ph-mid));
+    box-shadow:0 4px 14px rgba(13,73,58,.32);
+  }
+
+  /* ── Notification ring ──────────────────────── */
+  .notif-ring {
+    @apply absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center
+           rounded-full text-[10px] font-bold text-white;
+    background:var(--ph-danger);
+    animation:badgePop .3s cubic-bezier(.22,1,.36,1) both;
+  }
+  .notif-pulse::after {
+    content:'';
+    @apply absolute inset-0 rounded-full;
+    background:var(--ph-danger);
+    animation:ringPulse 1.6s ease-out infinite;
+  }
+
+  /* ── Alert banners ──────────────────────────── */
+  .alert-success {
+    @apply rounded-2xl border px-4 py-3 text-sm font-medium;
+    border-color:#9ae6b4; background:#f0fff4; color:#22543d;
+    animation:slideDown .28s cubic-bezier(.22,1,.36,1) both;
+  }
+  .alert-error {
+    @apply rounded-2xl border px-4 py-3 text-sm font-medium;
+    border-color:#feb2b2; background:#fff5f5; color:#742a2a;
+    animation:slideDown .28s cubic-bezier(.22,1,.36,1) both;
+  }
+  .alert-info {
+    @apply rounded-2xl border px-4 py-3 text-sm font-medium;
+    border-color:#bee3f8; background:#ebf8ff; color:#2a4365;
+    animation:slideDown .28s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  /* ── Gradient text ──────────────────────────── */
+  .gradient-text {
+    background:linear-gradient(135deg,var(--ph-mint),var(--ph-lime));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+
+  /* ── Animated gradient button ───────────────── */
+  .gradient-btn {
+    background:linear-gradient(270deg,var(--ph-green),var(--ph-mid),#0a6e58,var(--ph-green));
+    background-size:300% 300%;
+    animation:gradientShift 4s ease infinite;
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
+/* ── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background:var(--ph-border);
+  border-radius:99px;
+}
+::-webkit-scrollbar-thumb:hover { background:var(--ph-mint); }
+
+/* ── Focus visible ─────────────────────────────── */
+:focus-visible {
+  outline:2px solid var(--ph-mint);
+  outline-offset:2px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
+/* ── Selection ─────────────────────────────────── */
+::selection {
+  background:rgba(0,200,150,.2);
+  color:var(--ph-green);
+}
+
+/* ── Print ─────────────────────────────────────── */
+@media print {
+  aside,nav,header,.no-print { display:none !important; }
+  .panel { box-shadow:none !important; border:1px solid #ccc !important; }
+  body { background:white !important; }
 }

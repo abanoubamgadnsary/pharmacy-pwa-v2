@@ -52,6 +52,11 @@ export interface AppUser {
   createdAt: Date;
 }
 
+export interface AppSetting {
+  key: string;
+  value: string;
+}
+
 const DB_RESET_FLAG = "pharmacy_db_reset_attempted";
 const CATALOG_VERSION_KEY = "catalog_version";
 
@@ -60,6 +65,7 @@ export class PharmacyDB extends Dexie {
   sales!: Table<Sale>;
   catalog!: Table<DrugCatalog>;
   users!: Table<AppUser>;
+  settings!: Table<AppSetting>;
 
   constructor() {
     super("PharmacyDB");
@@ -129,6 +135,15 @@ export class PharmacyDB extends Dexie {
       sales:   "id, drugId, soldAt",
       catalog: "++id, barcode, commercial_name_en, commercial_name_ar, manufacturer",
       users:   "id, role, active, name",
+    });
+
+    // v6 — settings table (recovery key hash, etc.)
+    this.version(6).stores({
+      drugs:    "id, barcode, name, company, expiryDate, stock",
+      sales:    "id, drugId, soldAt",
+      catalog:  "++id, barcode, commercial_name_en, commercial_name_ar, manufacturer",
+      users:    "id, role, active, name",
+      settings: "key",
     });
   }
 }

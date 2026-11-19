@@ -316,6 +316,24 @@ export const translations = {
     usersPinChangeFail:       'Failed to update PIN',
     dbResetNotice:            'Local database was reset due to an upgrade error. Please reload the drug catalog and re-enter inventory.',
 
+    // Recovery key
+    forgotPinLink:            'Forgot PIN?',
+    forgotPinTitle:           'Reset PIN',
+    forgotPinSubtitle:        'Enter your recovery key to reset a PIN',
+    recoveryKeyLabel:         'Recovery Key',
+    recoveryKeyVerify:        'Verify',
+    recoveryKeyInvalid:       'Invalid recovery key',
+    recoveryKeyBack:          'Back to login',
+    recoveryKeyNotSet:        'No recovery key was set up. You can reset the database from the browser DevTools.',
+    recoverySelectUser:       'Select user to reset PIN',
+    recoveryNewPinFor:        (name: string) => `New PIN for ${name} (4–6 digits)`,
+    recoveryResetPin:         'Reset PIN',
+    recoveryKeySubtitle:      'Save your recovery key — you will need it if you forget your PIN',
+    recoveryKeyWarning:       '⚠️ Write this down! It will not be shown again.',
+    recoveryKeyCopy:          'Copy',
+    recoveryKeyHint:          'Use this key to reset any user\'s PIN if forgotten.',
+    recoveryKeyDone:          'I saved it — continue',
+
     // Reports page (extended)
     reportsAnalyticsTitle:    'Reports & Analytics',
     reportsAnalyticsSubtitle: 'Full overview of your pharmacy performance',
@@ -698,6 +716,24 @@ export const translations = {
     usersPinChanged:          (name: string) => `تم تحديث الرقم السري لـ ${name}`,
     usersPinChangeFail:       'فشل تحديث الرقم السري',
     dbResetNotice:            'تم إعادة ضبط قاعدة البيانات بسبب خطأ في الترقية. يرجى إعادة تحميل قاعدة الأدوية وإدخال المخزون من جديد.',
+
+    // Recovery key
+    forgotPinLink:            'نسيت الرقم السري؟',
+    forgotPinTitle:           'إعادة تعيين الرقم السري',
+    forgotPinSubtitle:        'أدخل مفتاح الاسترداد لإعادة تعيين الرقم السري',
+    recoveryKeyLabel:         'مفتاح الاسترداد',
+    recoveryKeyVerify:        'تحقق',
+    recoveryKeyInvalid:       'مفتاح الاسترداد غير صحيح',
+    recoveryKeyBack:          'العودة لتسجيل الدخول',
+    recoveryKeyNotSet:        'لم يتم إعداد مفتاح استرداد. يمكنك إعادة ضبط قاعدة البيانات من أدوات المتصفح.',
+    recoverySelectUser:       'اختار المستخدم لإعادة تعيين الرقم السري',
+    recoveryNewPinFor:        (name: string) => `رقم سري جديد لـ ${name} (4–6 أرقام)`,
+    recoveryResetPin:         'إعادة تعيين الرقم السري',
+    recoveryKeySubtitle:      'احفظ مفتاح الاسترداد — ستحتاجه إذا نسيت الرقم السري',
+    recoveryKeyWarning:       '⚠️ اكتبه! لن يظهر مرة أخرى.',
+    recoveryKeyCopy:          'نسخ',
+    recoveryKeyHint:          'استخدم هذا المفتاح لإعادة تعيين الرقم السري لأي مستخدم.',
+    recoveryKeyDone:          'حفظته — متابعة',
 
     // Reports page (extended)
     reportsAnalyticsTitle:    'التقارير والتحليلات',

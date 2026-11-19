@@ -2,6 +2,11 @@ import { db, AppUser, readyDb } from '../db';
 import { generateId } from '../utils/id';
 import { hashPin, verifyPin } from '../utils/pin';
 import { isValidPin, UserRole } from '../utils/permissions';
+import {
+  generateRecoveryKey,
+  hashRecoveryKey,
+  verifyRecoveryKey,
+} from '../utils/recovery';
 
 export async function hasAnyUser(): Promise<boolean> {
   await readyDb();
@@ -23,6 +28,7 @@ export async function createUser(
   role: UserRole,
   pin: string,
 ): Promise<AppUser> {
+  await readyDb();
   const trimmed = name.trim();
   if (!trimmed) throw new Error('Name is required');
   if (!isValidPin(pin)) throw new Error('Invalid PIN');
@@ -44,6 +50,7 @@ export async function authenticateUser(
   userId: string,
   pin: string,
 ): Promise<AppUser | null> {
+  await readyDb();
   const user = await db.users.get(userId);
   if (!user || !user.active) return null;
   const ok = await verifyPin(userId, pin, user.pinHash);
@@ -57,6 +64,7 @@ export async function updateUserPin(userId: string, pin: string): Promise<void> 
 }
 
 export async function setUserActive(userId: string, active: boolean): Promise<void> {
+  await readyDb();
   if (!active) {
     const user = await db.users.get(userId);
     if (user?.role === 'manager') {
@@ -67,4 +75,44 @@ export async function setUserActive(userId: string, active: boolean): Promise<vo
     }
   }
   await db.users.update(userId, { active });
+}
+
+// ── Recovery key ──────────────────────────────────────────────────────────────
+
+const RECOVERY_KEY_SETTING = 'recovery_key_hash';
+
+/** Generate a new recovery key, store its hash, and return the plain key (show once). */
+export async function createRecoveryKey(): Promise<string> {
+  await readyDb();
+  const key = generateRecoveryKey();
+  const hash = await hashRecoveryKey(key);
+  await db.settings.put({ key: RECOVERY_KEY_SETTING, value: hash });
+  return key;
+}
+
+/** Check whether a recovery key has been set up. */
+export async function hasRecoveryKey(): Promise<boolean> {
+  await readyDb();
+  const row = await db.settings.get(RECOVERY_KEY_SETTING);
+  return !!row?.value;
+}
+
+/** Verify the user-entered recovery key against the stored hash. */
+export async function checkRecoveryKey(inputKey: string): Promise<boolean> {
+  await readyDb();
+  const row = await db.settings.get(RECOVERY_KEY_SETTING);
+  if (!row?.value) return false;
+  return verifyRecoveryKey(inputKey, row.value);
+}
+
+/** Reset a user's PIN using the recovery key (verifies key first). */
+export async function resetPinWithRecoveryKey(
+  inputKey: string,
+  userId: string,
+  newPin: string,
+): Promise<boolean> {
+  const valid = await checkRecoveryKey(inputKey);
+  if (!valid) return false;
+  await updateUserPin(userId, newPin);
+  return true;
 }
