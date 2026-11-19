@@ -21,7 +21,6 @@ export const LoginPage: React.FC = () => {
   // Forgot PIN state
   const [forgotMode, setForgotMode] = useState(false);
   const [recoveryInput, setRecoveryInput] = useState('');
-  const [recoveryVerified, setRecoveryVerified] = useState(false);
   const [newPin, setNewPin] = useState('');
   const [confirmNewPin, setConfirmNewPin] = useState('');
   const [forgotStep, setForgotStep] = useState<'key' | 'selectUser' | 'newPin' | 'confirmPin'>('key');
@@ -51,7 +50,6 @@ export const LoginPage: React.FC = () => {
     setHasKey(exists);
     setForgotMode(true);
     setRecoveryInput('');
-    setRecoveryVerified(false);
     setNewPin('');
     setConfirmNewPin('');
     setForgotStep('key');
@@ -70,7 +68,6 @@ export const LoginPage: React.FC = () => {
     setError('');
     const ok = await checkRecoveryKey(recoveryInput);
     if (ok) {
-      setRecoveryVerified(true);
       // If only one user, skip user selection
       if (users && users.length === 1) {
         setForgotUserId(users[0].id);
