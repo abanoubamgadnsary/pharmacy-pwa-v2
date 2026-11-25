@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
-  Camera, Search, Minus, Plus, Trash2,
+  Camera, Search, Minus, Plus, Trash2, Pencil,
   ShoppingBag, BookOpen, X, Receipt,
   Loader2, CheckCircle, AlertTriangle,
 } from 'lucide-react';
@@ -62,6 +62,7 @@ export const SalesPage: React.FC = () => {
   const [lookingUp,      setLookingUp]      = useState(false);
   const [completedReceipt, setCompletedReceipt] = useState<CompletedReceipt | null>(null);
   const [unitPickerDrug, setUnitPickerDrug] = useState<Drug | null>(null);
+  const [editingCartDrugId, setEditingCartDrugId] = useState<string | null>(null);
 
   const showMsg = (type: Flash['type'], text: string) => {
     setFlash({ type, text });
@@ -154,7 +155,15 @@ export const SalesPage: React.FC = () => {
     setScannedBarcode('');
   };
 
-  const openUnitPicker = (drug: Drug) => setUnitPickerDrug(drug);
+  const openUnitPicker = (drug: Drug) => {
+    setEditingCartDrugId(null);
+    setUnitPickerDrug(drug);
+  };
+
+  const openCartEdit = (drug: Drug) => {
+    setEditingCartDrugId(drug.id ?? null);
+    setUnitPickerDrug(drug);
+  };
 
   const addToCart = (drug: Drug, qty: number, saleUnit: SaleUnit, unitPrice: number) => {
     const lineKey = `${drug.id}:${saleUnit}`;
@@ -178,6 +187,24 @@ export const SalesPage: React.FC = () => {
 
   const handleUnitPickerConfirm = (items: SalePick[]) => {
     if (!unitPickerDrug) return;
+    if (editingCartDrugId) {
+      setCart((prev) => {
+        const rest = prev.filter((l) => l.drug.id !== editingCartDrugId);
+        const updated = items
+          .filter((item) => item.qty > 0)
+          .map((item) => ({
+            drug: unitPickerDrug,
+            qty: item.qty,
+            saleUnit: item.unit,
+            unitPrice: item.unitPrice,
+            lineKey: `${unitPickerDrug.id}:${item.unit}`,
+          }));
+        return [...rest, ...updated];
+      });
+      setEditingCartDrugId(null);
+      setUnitPickerDrug(null);
+      return;
+    }
     for (const item of items) {
       if (item.qty > 0) addToCart(unitPickerDrug, item.qty, item.unit, item.unitPrice);
     }
@@ -443,10 +470,23 @@ export const SalesPage: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    <button onClick={() => setCart((p) => p.filter((l) => l.lineKey !== lineKey))}
-                      className="text-slate-300 hover:text-rose-400 transition-colors">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => openCartEdit(drug)}
+                        className="text-slate-300 hover:text-[#0d493a] transition-colors"
+                        title={t.editDrug}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCart((p) => p.filter((l) => l.lineKey !== lineKey))}
+                        className="text-slate-300 hover:text-rose-400 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <span className="text-sm font-bold text-emerald-600">
                       {formatEgp(unitPrice * qty)}
                     </span>
@@ -521,8 +561,22 @@ export const SalesPage: React.FC = () => {
       {unitPickerDrug && (
         <SaleUnitPicker
           drug={unitPickerDrug}
+          initialBoxQty={
+            editingCartDrugId
+              ? (cart.find((l) => l.drug.id === editingCartDrugId && l.saleUnit === 'box')?.qty ?? 0)
+              : undefined
+          }
+          initialStripQty={
+            editingCartDrugId
+              ? (cart.find((l) => l.drug.id === editingCartDrugId && l.saleUnit === 'strip')?.qty ?? 0)
+              : undefined
+          }
+          confirmLabel={editingCartDrugId ? t.saveChanges : undefined}
           onConfirm={handleUnitPickerConfirm}
-          onClose={() => setUnitPickerDrug(null)}
+          onClose={() => {
+            setEditingCartDrugId(null);
+            setUnitPickerDrug(null);
+          }}
         />
       )}
 

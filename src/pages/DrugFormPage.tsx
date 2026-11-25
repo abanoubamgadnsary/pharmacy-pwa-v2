@@ -49,6 +49,7 @@ export const DrugFormPage: React.FC = () => {
     barcode: initBarcode,
   });
   const [errors, setErrors] = useState<Partial<FormState>>({});
+  const [stripPriceManual, setStripPriceManual] = useState(false);
   const [flash, setFlash] = useState("");
   const [flashErr, setFlashErr] = useState("");
   const [catalogFilled, setCatalogFilled] = useState(false);
@@ -57,38 +58,59 @@ export const DrugFormPage: React.FC = () => {
     "idle" | "looking" | "found" | "notfound"
   >("idle");
 
+  const calcStripPrice = (priceStr: string, stripsStr: string): string => {
+    const p = parseFloat(priceStr);
+    const spb = parseInt(stripsStr, 10);
+    if (!Number.isFinite(p) || p <= 0 || !Number.isInteger(spb) || spb < 1) {
+      return "";
+    }
+    return Number((p / spb).toFixed(2)).toString();
+  };
+
   useEffect(() => {
     if (isEdit && id) loadDrug(id);
   }, [id]);
 
   const loadDrug = async (drugId: string) => {
     const drug = await getDrugById(drugId);
-    if (drug)
+    if (drug) {
+      const priceStr = drug.price.toString();
+      const spbStr = (drug.stripsPerBox ?? 1).toString();
+      const autoPrice = calcStripPrice(priceStr, spbStr);
+      const loadedStrip = drug.stripPrice != null ? drug.stripPrice.toString() : "";
+      setStripPriceManual(loadedStrip !== "" && loadedStrip !== autoPrice);
       setForm({
         barcode: drug.barcode,
         name: drug.name,
         nameAr: drug.nameAr ?? "",
         activeIngredient: drug.activeIngredient,
         company: drug.company,
-        price: drug.price.toString(),
+        price: priceStr,
         costPrice: drug.costPrice != null ? drug.costPrice.toString() : "",
-        stripsPerBox: (drug.stripsPerBox ?? 1).toString(),
-        stripPrice: drug.stripPrice != null ? drug.stripPrice.toString() : "",
+        stripsPerBox: spbStr,
+        stripPrice: loadedStrip || autoPrice,
         stock: drug.stock.toString(),
         expiryDate: drug.expiryDate,
       });
+    }
   };
 
   const fillFromCatalog = (drug: DrugCatalog) => {
-    setForm((prev) => ({
-      ...prev,
-      name: drug.commercial_name_en,
-      nameAr: drug.commercial_name_ar,
-      activeIngredient: drug.scientific_composition,
-      company: drug.manufacturer,
-      price: drug.price_egp > 0 ? drug.price_egp.toString() : prev.price,
-      barcode: prev.barcode || drug.barcode || prev.barcode,
-    }));
+    setForm((prev) => {
+      const nextPrice = drug.price_egp > 0 ? drug.price_egp.toString() : prev.price;
+      return {
+        ...prev,
+        name: drug.commercial_name_en,
+        nameAr: drug.commercial_name_ar,
+        activeIngredient: drug.scientific_composition,
+        company: drug.manufacturer,
+        price: nextPrice,
+        stripPrice: stripPriceManual
+          ? prev.stripPrice
+          : calcStripPrice(nextPrice, prev.stripsPerBox),
+        barcode: drug.barcode || prev.barcode,
+      };
+    });
     setCatalogFilled(true);
     setErrors({});
   };
@@ -193,12 +215,22 @@ export const DrugFormPage: React.FC = () => {
           const formattedValue =
             key === "expiryDate"
               ? rawValue
-                  .replace(/\D/g, "")
-                  .replace(/^([0-9]{2})([0-9]*)$/, "$1/$2")
-                  .slice(0, 7)
+                .replace(/\D/g, "")
+                .replace(/^([0-9]{2})([0-9]*)$/, "$1/$2")
+                .slice(0, 7)
               : rawValue;
 
-          setForm((p) => ({ ...p, [key]: formattedValue }));
+          if (key === "stripPrice") {
+            setStripPriceManual(formattedValue !== "");
+          }
+
+          setForm((p) => {
+            const next = { ...p, [key]: formattedValue };
+            if ((key === "price" || key === "stripsPerBox") && !stripPriceManual) {
+              next.stripPrice = calcStripPrice(next.price, next.stripsPerBox);
+            }
+            return next;
+          });
           if (errors[key]) setErrors((p) => ({ ...p, [key]: "" }));
           if (key === "barcode") setScanStatus("idle");
         }}

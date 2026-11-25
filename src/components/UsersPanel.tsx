@@ -123,13 +123,20 @@ export const UsersPanel: React.FC = () => {
       )}
 
       {showAdd && (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleAdd();
+          }}
+          className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3"
+        >
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t.usersNamePlaceholder}
             className="field-input"
+            autoFocus
           />
           <select
             value={role}
@@ -141,10 +148,10 @@ export const UsersPanel: React.FC = () => {
           </select>
           <p className="text-xs text-slate-500">{t.usersPinHint}</p>
           <PinPad value={pin} onChange={setPin} onSubmit={handleAdd} />
-          <button type="button" onClick={handleAdd} className="primary-btn w-full py-2">
+          <button type="submit" className="primary-btn w-full py-2">
             {t.usersSave}
           </button>
-        </div>
+        </form>
       )}
 
       {changingPinFor && (

@@ -18,15 +18,73 @@ export const PinPad: React.FC<Props> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
+
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
+
+  const maxLengthRef = useRef(maxLength);
+  maxLengthRef.current = maxLength;
+
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   // Auto-focus the hidden input so keyboard works immediately
   useEffect(() => {
-    if (!disabled) inputRef.current?.focus();
+    if (disabled) return;
+
+    inputRef.current?.focus();
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 50);
+
+    return () => clearTimeout(timer);
   }, [disabled]);
+
+  // Global keyboard listener so typing digits/backspace/enter always works
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (disabledRef.current) return;
+
+      const active = document.activeElement;
+      // Do not intercept if focus is on a different input/textarea/select
+      if (
+        active &&
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName) &&
+        active !== inputRef.current
+      ) {
+        return;
+      }
+
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        if (valueRef.current.length < maxLengthRef.current) {
+          onChangeRef.current(valueRef.current + e.key);
+        }
+        inputRef.current?.focus();
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        onChangeRef.current(valueRef.current.slice(0, -1));
+        inputRef.current?.focus();
+      } else if (e.key === 'Enter') {
+        if (onSubmitRef.current) {
+          e.preventDefault();
+          onSubmitRef.current();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   const press = (digit: string) => {
     if (disabled || value.length >= maxLength) return;
     onChange(value + digit);
-    // Re-focus the hidden input after a button click
     inputRef.current?.focus();
   };
 
@@ -41,19 +99,9 @@ export const PinPad: React.FC<Props> = ({
     if (!disabled) onChange(raw);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !disabled) {
-      e.preventDefault();
-      onChange(value.slice(0, -1));
-    } else if (e.key === 'Enter' && onSubmit && !disabled) {
-      e.preventDefault();
-      onSubmit();
-    }
-  };
-
   return (
     <div className="space-y-4" onClick={() => inputRef.current?.focus()}>
-      {/* Hidden input to capture physical keyboard typing */}
+      {/* Hidden input to capture physical/virtual keyboard typing */}
       <input
         ref={inputRef}
         type="text"
@@ -62,7 +110,6 @@ export const PinPad: React.FC<Props> = ({
         autoComplete="off"
         value={value}
         onChange={handleKeyboardInput}
-        onKeyDown={handleKeyDown}
         disabled={disabled}
         className="sr-only"
         aria-label="PIN input"

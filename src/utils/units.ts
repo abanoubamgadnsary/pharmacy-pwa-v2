@@ -66,13 +66,11 @@ export function splitStock(drug: Drug): { boxes: number; strips: number } {
 
 export function maxBoxesGivenStrips(drug: Drug, stripQty: number): number {
   const spb = getStripsPerBox(drug);
-  if (spb <= 1) return stripQty > 0 ? 0 : drug.stock;
   return Math.max(0, Math.floor((drug.stock - stripQty) / spb));
 }
 
 export function maxStripsGivenBoxes(drug: Drug, boxQty: number): number {
   const spb = getStripsPerBox(drug);
-  if (spb <= 1) return boxQty > 0 ? 0 : drug.stock;
   return Math.max(0, drug.stock - boxQty * spb);
 }
 

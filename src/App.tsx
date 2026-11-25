@@ -13,6 +13,7 @@ import { LoginPage }          from './pages/LoginPage';
 import { SetupPage }          from './pages/SetupPage';
 import { isCatalogLoaded }    from './services/catalogLoader';
 import { LanguageProvider, useLang } from './contexts/LanguageContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { wasDbResetThisSession } from './db';
 
@@ -83,20 +84,22 @@ function App() {
 
   return (
     <LanguageProvider>
-      <AuthProvider>
-        <DbResetNotice />
-        {appState === 'checking' && (
-          <div className="min-h-screen flex items-center justify-center bg-emerald-50">
-            <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
+      <ThemeProvider>
+        <AuthProvider>
+          <DbResetNotice />
+          {appState === 'checking' && (
+            <div className="min-h-screen flex items-center justify-center bg-emerald-50">
+              <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
 
-        {appState === 'need_catalog' && (
-          <CatalogInitializer onDone={() => setAppState('ready')} />
-        )}
+          {appState === 'need_catalog' && (
+            <CatalogInitializer onDone={() => setAppState('ready')} />
+          )}
 
-        {appState === 'ready' && <AppRoutes />}
-      </AuthProvider>
+          {appState === 'ready' && <AppRoutes />}
+        </AuthProvider>
+      </ThemeProvider>
     </LanguageProvider>
   );
 }

@@ -5,11 +5,14 @@ import {
   Bell, ChevronDown, Database, FileText,
   Menu, Package, Search, ShoppingCart, X,
   Languages, Download, CheckCircle, Activity,
-  AlertTriangle, TrendingUp,
+  AlertTriangle, TrendingUp, LogOut, ArrowLeftRight,
+  Palette, Check,
 } from 'lucide-react';
 import { db, Drug } from '../db';
 import { formatEgp } from '../utils/format';
 import { useLang } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { THEME_PALETTES, useTheme } from '../contexts/ThemeContext';
 
 /* ── ECG / Heartbeat SVG line ─────────────────────────────────────────── */
 const EcgLine: React.FC<{ className?: string }> = ({ className = '' }) => (
@@ -97,11 +100,14 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, end, badge, on
 export const Layout: React.FC = () => {
   const navigate = useNavigate();
   const { t, lang, toggleLang, isRtl } = useLang();
+  const { user, logout, isManager } = useAuth();
+  const { paletteId, customColor, setPalette, setCustomColor } = useTheme();
   const drugs = useLiveQuery(() => db.drugs.toArray()) || [];
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
@@ -130,12 +136,16 @@ export const Layout: React.FC = () => {
     setCanInstall(false); setInstallPrompt(null);
   };
 
-  const navItems = [
-    { to: '/', icon: ShoppingCart, label: t.sales, end: true },
-    { to: '/inventory', icon: Package, label: t.inventory },
-    { to: '/reports', icon: FileText, label: t.reports },
-    { to: '/management', icon: Database, label: t.manage },
-  ];
+  const navItems = isManager
+    ? [
+        { to: '/', icon: ShoppingCart, label: t.sales, end: true },
+        { to: '/inventory', icon: Package, label: t.inventory },
+        { to: '/reports', icon: FileText, label: t.reports },
+        { to: '/management', icon: Database, label: t.manage },
+      ]
+    : [
+        { to: '/', icon: ShoppingCart, label: t.sales, end: true },
+      ];
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -160,12 +170,17 @@ export const Layout: React.FC = () => {
     setSearchQuery(''); closeMenus();
     navigate(`/management/edit/${drug.id}`);
   };
-  const closeMenus = () => { setShowNotifications(false); setShowAdminMenu(false); setShowMobileMenu(false); };
+  const closeMenus = () => {
+    setShowNotifications(false);
+    setShowAdminMenu(false);
+    setShowThemeMenu(false);
+    setShowMobileMenu(false);
+  };
 
   /* ── Sidebar content (shared desktop/mobile) ─────────────────────────── */
   const SidebarContent = ({ onClose }: { onClose?: () => void }) => (
     <div className="flex h-full flex-col"
-      style={{ background: 'linear-gradient(175deg,#041510 0%,#072318 40%,#0a2f1e 100%)' }}>
+      style={{ background: 'linear-gradient(175deg, var(--ph-darkest) 0%, var(--ph-dark) 40%, var(--ph-green) 100%)' }}>
 
       {/* Logo */}
       <div className="px-5 pt-7 pb-5">
@@ -173,15 +188,15 @@ export const Layout: React.FC = () => {
           {/* Animated cross icon */}
           <div className="relative grid h-10 w-10 place-items-center rounded-2xl shrink-0"
             style={{
-              background: 'linear-gradient(135deg,#0d493a,#1a6b55)',
-              boxShadow: '0 4px 16px rgba(0,200,150,.35), inset 0 1px 0 rgba(255,255,255,.1)',
+              background: 'linear-gradient(135deg, var(--ph-green), var(--ph-mid))',
+              boxShadow: '0 4px 16px var(--ph-glow-lg), inset 0 1px 0 rgba(255,255,255,.1)',
             }}>
-            <span className="text-[#c8ff5e] anim-heartbeat">
+            <span className="anim-heartbeat" style={{ color: 'var(--ph-lime)' }}>
               <MedCross size={18} />
             </span>
             {/* Glow ring */}
             <span className="absolute inset-0 rounded-2xl anim-glow-pulse"
-              style={{ boxShadow: '0 0 0 3px rgba(0,200,150,.2)' }} />
+              style={{ boxShadow: '0 0 0 3px var(--ph-glow)' }} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold tracking-widest text-white uppercase leading-none">
@@ -299,7 +314,7 @@ export const Layout: React.FC = () => {
       )}
 
       {/* Footer */}
-      <div className="border-t px-4 py-3"
+      <div className="border-t px-4 py-3 space-y-2.5"
         style={{ borderColor: 'rgba(255,255,255,.07)' }}>
         <div className="flex items-center gap-2.5">
           <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl"
@@ -309,8 +324,11 @@ export const Layout: React.FC = () => {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white/70 truncate">
-              {lang === 'ar' ? 'الصيدلية' : 'Pharmacy'}
+            <p className="text-xs font-semibold text-white/85 truncate">
+              {user?.name ?? (lang === 'ar' ? 'الصيدلية' : 'Pharmacy')}
+            </p>
+            <p className="text-[10px] truncate" style={{ color: 'rgba(200,255,94,.7)' }}>
+              {isManager ? t.roleManager : t.roleCashier}
             </p>
           </div>
           {/* Lang toggle */}
@@ -320,6 +338,17 @@ export const Layout: React.FC = () => {
             {lang === 'ar' ? 'EN' : 'عر'}
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={() => { onClose?.(); logout(); }}
+          className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold
+            text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          style={{ border: '1px solid rgba(255,255,255,.1)' }}
+        >
+          <ArrowLeftRight className="h-3.5 w-3.5 text-[#c8ff5e]" />
+          <span>{t.switchUser}</span>
+        </button>
       </div>
     </div>
   );
@@ -354,11 +383,11 @@ export const Layout: React.FC = () => {
         <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md"
           style={{
             borderBottom: '1px solid var(--ph-border)',
-            boxShadow: '0 1px 0 rgba(0,0,0,.04), 0 4px 16px rgba(13,73,58,.05)',
+            boxShadow: '0 1px 0 rgba(0,0,0,.04), 0 4px 16px var(--ph-glow)',
           }}>
           {/* Top accent line */}
           <div className="h-0.5 w-full"
-            style={{ background: 'linear-gradient(90deg,#0d493a,#00c896,#c8ff5e,#0d493a)' }} />
+            style={{ background: 'linear-gradient(90deg, var(--ph-green), var(--ph-mint), var(--ph-lime), var(--ph-green))' }} />
 
           <div className="flex h-15 items-center gap-3 px-4 lg:px-6 py-3">
             {/* Hamburger */}
@@ -410,6 +439,83 @@ export const Layout: React.FC = () => {
 
             <div className="ms-auto flex items-center gap-2">
 
+              {/* Color Palette Switcher */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowThemeMenu(o => !o);
+                    setShowNotifications(false);
+                    setShowAdminMenu(false);
+                  }}
+                  className="grid h-9 w-9 place-items-center rounded-xl border transition-all duration-200 hover:bg-slate-50 hover:shadow-sm"
+                  style={{ borderColor: 'var(--ph-border)', color: 'var(--ph-green)' }}
+                  title={t.themeTitle}
+                >
+                  <Palette className="h-4 w-4" />
+                </button>
+
+                {showThemeMenu && (
+                  <div
+                    className="absolute end-0 top-12 z-50 w-60 anim-slide-down rounded-2xl border bg-white p-3 space-y-3"
+                    style={{ borderColor: 'var(--ph-border)', boxShadow: 'var(--shadow-lg)' }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold" style={{ color: 'var(--ph-text)' }}>
+                        {t.themeTitle}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowThemeMenu(false)}
+                        className="text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {THEME_PALETTES.map((p) => {
+                        const active = paletteId === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setPalette(p.id)}
+                            className={`flex flex-col items-center gap-1 rounded-xl border p-2 text-[11px] font-medium transition-all ${
+                              active ? 'bg-slate-50 shadow-sm' : 'border-slate-100 hover:bg-slate-50'
+                            }`}
+                            style={active ? { borderColor: p.preview } : undefined}
+                          >
+                            <span
+                              className="grid h-6 w-6 place-items-center rounded-full text-white shadow-inner"
+                              style={{ background: p.preview }}
+                            >
+                              {active && <Check className="h-3.5 w-3.5" />}
+                            </span>
+                            <span className="truncate w-full text-center text-slate-700">
+                              {lang === 'ar' ? p.nameAr : p.nameEn}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <label
+                      className="flex items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs font-medium cursor-pointer hover:bg-slate-50"
+                      style={{ borderColor: 'var(--ph-border)', color: 'var(--ph-text)' }}
+                    >
+                      <span>{t.themeCustom}</span>
+                      <input
+                        type="color"
+                        value={customColor}
+                        onChange={(e) => setCustomColor(e.target.value)}
+                        className="h-6 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
               {/* Language toggle */}
               <button onClick={toggleLang}
                 className="flex items-center gap-1.5 rounded-xl border px-3 py-2
@@ -422,7 +528,7 @@ export const Layout: React.FC = () => {
               {/* Notifications */}
               <div className="relative">
                 <button
-                  onClick={() => { setShowNotifications(o => !o); setShowAdminMenu(false); }}
+                  onClick={() => { setShowNotifications(o => !o); setShowAdminMenu(false); setShowThemeMenu(false); }}
                   className="relative grid h-9 w-9 place-items-center rounded-xl border
                     transition-all hover:bg-slate-50 hover:border-emerald-300"
                   style={{ borderColor: 'var(--ph-border)' }}>
@@ -497,27 +603,31 @@ export const Layout: React.FC = () => {
                 )}
               </div>
 
-              {/* Admin menu */}
-              <div className="relative hidden sm:block">
+              {/* User / Switch account menu */}
+              <div className="relative">
                 <button
-                  onClick={() => { setShowAdminMenu(o => !o); setShowNotifications(false); }}
+                  onClick={() => { setShowAdminMenu(o => !o); setShowNotifications(false); setShowThemeMenu(false); }}
                   className="flex items-center gap-2 rounded-xl border px-3 py-2
                     transition-all hover:bg-slate-50"
                   style={{ borderColor: 'var(--ph-border)' }}>
                   <div className="grid h-7 w-7 place-items-center rounded-lg"
-                    style={{ background: 'linear-gradient(135deg,#0d493a,#1a6b55)' }}>
+                    style={{ background: 'linear-gradient(135deg, var(--ph-green), var(--ph-mid))', color: 'var(--ph-lime)' }}>
                     <MedCross size={10} />
                   </div>
-                  <div className="leading-tight">
-                    <p className="text-xs font-semibold" style={{ color: 'var(--ph-text)' }}>{t.storeAdmin}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--ph-mint)' }}>{t.online}</p>
+                  <div className="leading-tight text-start">
+                    <p className="text-xs font-semibold" style={{ color: 'var(--ph-text)' }}>
+                      {user?.name ?? t.storeAdmin}
+                    </p>
+                    <p className="text-[10px]" style={{ color: 'var(--ph-mint)' }}>
+                      {isManager ? t.roleManager : t.roleCashier}
+                    </p>
                   </div>
                   <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                 </button>
                 {showAdminMenu && (
                   <div className="absolute end-0 top-12 z-50 w-52 anim-slide-down rounded-2xl border bg-white p-2"
                     style={{ borderColor: 'var(--ph-border)', boxShadow: 'var(--shadow-lg)' }}>
-                    {[
+                    {isManager && [
                       { label: t.manageInventory, to: '/management' },
                       { label: t.viewReports, to: '/reports' },
                     ].map(item => (
@@ -529,6 +639,14 @@ export const Layout: React.FC = () => {
                         {item.label}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => { closeMenus(); logout(); }}
+                      className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-start text-sm font-medium
+                        text-rose-600 transition-colors hover:bg-rose-50 ${isManager ? 'mt-1 border-t border-slate-100 pt-2.5' : ''}`}>
+                      <LogOut className="h-4 w-4 shrink-0" />
+                      <span>{t.switchUser}</span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -544,7 +662,7 @@ export const Layout: React.FC = () => {
         {/* ── Mobile Bottom Nav ── */}
         <nav className="sticky bottom-0 z-30 border-t bg-white/95 backdrop-blur-md lg:hidden"
           style={{ borderColor: 'var(--ph-border)', boxShadow: '0 -4px 20px rgba(13,73,58,.08)' }}>
-          <div className="grid grid-cols-4">
+          <div className={`grid ${isManager ? 'grid-cols-4' : 'grid-cols-1'}`}>
             {navItems.map(item => (
               <NavLink key={item.to} to={item.to} end={item.end}
                 className={({ isActive }) =>

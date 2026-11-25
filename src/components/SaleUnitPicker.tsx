@@ -7,7 +7,6 @@ import {
   getStripsPerBox,
   getUnitPrice,
   hasStripBoxChoice,
-  maxSellQty,
   maxBoxesGivenStrips,
   maxStripsGivenBoxes,
   splitStock,
@@ -19,6 +18,9 @@ export type SalePick = { unit: SaleUnit; qty: number; unitPrice: number };
 
 interface Props {
   drug: Drug;
+  initialBoxQty?: number;
+  initialStripQty?: number;
+  confirmLabel?: string;
   onConfirm: (items: SalePick[]) => void;
   onClose: () => void;
 }
@@ -89,6 +91,9 @@ function CounterRow({
 
 export const SaleUnitPicker: React.FC<Props> = ({
   drug,
+  initialBoxQty,
+  initialStripQty,
+  confirmLabel,
   onConfirm,
   onClose,
 }) => {
@@ -97,22 +102,18 @@ export const SaleUnitPicker: React.FC<Props> = ({
   const spb = getStripsPerBox(drug);
   const stockSplit = splitStock(drug);
 
-  const [boxQty, setBoxQty] = useState(0);
-  const [stripQty, setStripQty] = useState(multiUnit ? 1 : 1);
+  const [boxQty, setBoxQty] = useState(initialBoxQty ?? (multiUnit ? 0 : 1));
+  const [stripQty, setStripQty] = useState(initialStripQty ?? (multiUnit ? 1 : 0));
 
   const maxBoxes = maxBoxesGivenStrips(drug, stripQty);
   const maxStrips = maxStripsGivenBoxes(drug, boxQty);
 
-  const total = useMemo(() => {
-    if (!multiUnit) {
-      const q = stripQty || boxQty;
-      return getUnitPrice(drug, "box") * q;
-    }
-    return (
+  const total = useMemo(
+    () =>
       getUnitPrice(drug, "box") * boxQty +
-      getUnitPrice(drug, "strip") * stripQty
-    );
-  }, [multiUnit, drug, boxQty, stripQty]);
+      getUnitPrice(drug, "strip") * stripQty,
+    [drug, boxQty, stripQty],
+  );
 
   const requestedStrips = totalStripsRequested(boxQty, stripQty, drug);
   const canConfirm = requestedStrips > 0 && requestedStrips <= drug.stock;
@@ -120,23 +121,18 @@ export const SaleUnitPicker: React.FC<Props> = ({
   const handleConfirm = () => {
     if (!canConfirm) return;
     const items: SalePick[] = [];
-    if (multiUnit) {
-      if (boxQty > 0)
-        items.push({
-          unit: "box",
-          qty: boxQty,
-          unitPrice: getUnitPrice(drug, "box"),
-        });
-      if (stripQty > 0)
-        items.push({
-          unit: "strip",
-          qty: stripQty,
-          unitPrice: getUnitPrice(drug, "strip"),
-        });
-    } else {
-      const q = Math.max(boxQty, stripQty, 1);
-      items.push({ unit: "box", qty: q, unitPrice: getUnitPrice(drug, "box") });
-    }
+    if (boxQty > 0)
+      items.push({
+        unit: "box",
+        qty: boxQty,
+        unitPrice: getUnitPrice(drug, "box"),
+      });
+    if (stripQty > 0)
+      items.push({
+        unit: "strip",
+        qty: stripQty,
+        unitPrice: getUnitPrice(drug, "strip"),
+      });
     onConfirm(items);
   };
 
@@ -182,7 +178,7 @@ export const SaleUnitPicker: React.FC<Props> = ({
             )}
           </div>
 
-          {multiUnit ? (
+          {multiUnit && (
             <>
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl border-2 border-[#0d493a]/20 bg-[#f4fbf6] p-3 text-center">
@@ -207,32 +203,25 @@ export const SaleUnitPicker: React.FC<Props> = ({
               <p className="text-center text-xs text-slate-500">
                 {t.stripsPerBoxShort}: {spb} · {t.saleUnitStockHint}
               </p>
-
-              <CounterRow
-                icon={Package}
-                label={t.saleUnitBox}
-                unitPrice={getUnitPrice(drug, "box")}
-                qty={boxQty}
-                max={maxBoxes}
-                onChange={handleBoxChange}
-              />
-              <CounterRow
-                icon={Layers}
-                label={t.saleUnitStrip}
-                unitPrice={getUnitPrice(drug, "strip")}
-                qty={stripQty}
-                max={maxStrips}
-                onChange={handleStripChange}
-              />
             </>
-          ) : (
+          )}
+
+          <CounterRow
+            icon={Package}
+            label={t.saleUnitBox}
+            unitPrice={getUnitPrice(drug, "box")}
+            qty={boxQty}
+            max={maxBoxes}
+            onChange={handleBoxChange}
+          />
+          {multiUnit && (
             <CounterRow
-              icon={Package}
-              label={t.saleUnitQty}
-              unitPrice={getUnitPrice(drug, "box")}
+              icon={Layers}
+              label={t.saleUnitStrip}
+              unitPrice={getUnitPrice(drug, "strip")}
               qty={stripQty}
-              max={maxSellQty(drug, "box")}
-              onChange={setStripQty}
+              max={maxStrips}
+              onChange={handleStripChange}
             />
           )}
 
@@ -241,11 +230,9 @@ export const SaleUnitPicker: React.FC<Props> = ({
               {formatEgp(total)}
             </span>
             <span className="text-sm text-emerald-800 text-end">
-              {multiUnit && boxQty > 0 && `${boxQty} ${t.saleUnitBox}`}
-              {multiUnit && boxQty > 0 && stripQty > 0 && " + "}
-              {multiUnit && stripQty > 0 && `${stripQty} ${t.saleUnitStrip}`}
-              {!multiUnit &&
-                `${stripQty} × ${formatEgp(getUnitPrice(drug, "box"))}`}
+              {boxQty > 0 && `${boxQty} ${t.saleUnitBox}`}
+              {boxQty > 0 && stripQty > 0 && " + "}
+              {stripQty > 0 && `${stripQty} ${t.saleUnitStrip}`}
             </span>
           </div>
 
@@ -263,7 +250,7 @@ export const SaleUnitPicker: React.FC<Props> = ({
               onClick={handleConfirm}
               className="primary-btn w-full py-3"
             >
-              {t.saleUnitAddToCart}
+              {confirmLabel ?? t.saleUnitAddToCart}
             </button>
           )}
         </div>

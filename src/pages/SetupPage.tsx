@@ -69,7 +69,13 @@ export const SetupPage: React.FC = () => {
         </div>
 
         {step === 'name' && (
-          <div className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (name.trim()) setStep('pin');
+            }}
+            className="space-y-4"
+          >
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t.setupManagerName}</label>
               <input
@@ -82,14 +88,13 @@ export const SetupPage: React.FC = () => {
               />
             </div>
             <button
-              type="button"
+              type="submit"
               disabled={!name.trim()}
-              onClick={() => setStep('pin')}
               className="primary-btn w-full py-3 disabled:opacity-50"
             >
               {t.setupContinue}
             </button>
-          </div>
+          </form>
         )}
 
         {step === 'pin' && (
